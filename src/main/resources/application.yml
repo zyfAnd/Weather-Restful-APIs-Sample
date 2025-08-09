@@ -1,1 +1,42 @@
- 
+server:
+  port: 8080
+
+spring:
+  application:
+    name: weather-api
+  datasource:
+    url: jdbc:h2:mem:weatherdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+
+# API Configuration - Our 5 dummy API Keys
+api:
+  keys:
+    - "5b595d4b-01d3-4d2c-9c51-508d344f2022"
+    - "8c610030-ae5c-4e61-a455-d6e57af180c4"
+    - "6682b565-f821-42e6-b2f5-46987514919a"
+    - "8a82ecc8-54d6-43bc-a68b-8015251e09e6"
+    - "f6e167de-a301-417d-8637-097f961d2946"
+  rate-limit:
+    requests-per-hour: 5
+
+# Logging Configuration
+logging:
+  level:
+    com.kg2s: INFO
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE 
