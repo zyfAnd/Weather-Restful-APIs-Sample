@@ -33,7 +33,7 @@ api:
   rate-limit:
     requests-per-hour: 5
 
-# OpenWeatherMap Configuration
+# OpenWeatherMap Configuration , it is just for mock one(inactive in open weather console)
 openweathermap:
   api:
     key: "1a250b6158e9394dfb25b06bbb0d4b83"
