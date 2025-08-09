@@ -5,6 +5,7 @@ import com.kg2s.domain.*;
 import com.kg2s.repository.ApiKeyUsageRepository;
 import com.kg2s.repository.WeatherDataRepository;
 import com.kg2s.service.WeatherService;
+import com.kg2s.service.OpenWeatherMapService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +32,9 @@ public class WeatherServiceImpl implements WeatherService {
     @Autowired
     private WeatherApiConfig weatherApiConfig;
     
+    @Autowired
+    private OpenWeatherMapService openWeatherMapService;
+    
     private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
@@ -52,16 +56,19 @@ public class WeatherServiceImpl implements WeatherService {
             return convertToResponse(data);
         }
         
-        // Generate mock weather data based on city (simulating OpenWeatherMap API call)
-        WeatherData mockWeatherData = generateMockWeatherData(city, country, apiKey);
+        // Call OpenWeatherMap API to get real weather data
+        OpenWeatherMapResponse openWeatherResponse = openWeatherMapService.getWeatherData(city, country);
+        
+        // Convert OpenWeatherMap response to our WeatherData entity
+        WeatherData weatherData = convertOpenWeatherResponseToWeatherData(openWeatherResponse, city, country, apiKey);
         
         // Save to database
-        weatherDataRepository.save(mockWeatherData);
+        weatherDataRepository.save(weatherData);
         
         // Update API key usage
         updateApiKeyUsage(apiKey);
         
-        return convertToResponse(mockWeatherData);
+        return convertToResponse(weatherData);
     }
 
     @Override
@@ -81,56 +88,24 @@ public class WeatherServiceImpl implements WeatherService {
     }
     
     /**
-     * Generate mock weather data to simulate OpenWeatherMap API response
+     * Convert OpenWeatherMap API response to WeatherData entity
      */
-    private WeatherData generateMockWeatherData(String city, String country, String apiKey) {
-        String description;
-        String main;
-        String weatherId;
-        String icon;
-        
-        // Generate different weather based on city name for variety
-        switch (city.toLowerCase()) {
-            case "london":
-                description = "light rain";
-                main = "Rain";
-                weatherId = "500";
-                icon = "10d";
-                break;
-            case "paris":
-                description = "few clouds";
-                main = "Clouds";
-                weatherId = "801";
-                icon = "02d";
-                break;
-            case "tokyo":
-                description = "clear sky";
-                main = "Clear";
-                weatherId = "800";
-                icon = "01d";
-                break;
-            case "new york":
-            case "newyork":
-                description = "scattered clouds";
-                main = "Clouds";
-                weatherId = "802";
-                icon = "03d";
-                break;
-            case "beijing":
-                description = "haze";
-                main = "Haze";
-                weatherId = "721";
-                icon = "50d";
-                break;
-            default:
-                description = "partly cloudy";
-                main = "Clouds";
-                weatherId = "803";
-                icon = "04d";
-                break;
+    private WeatherData convertOpenWeatherResponseToWeatherData(OpenWeatherMapResponse response, String city, String country, String apiKey) {
+        if (response.getWeather() == null || response.getWeather().isEmpty()) {
+            throw new RuntimeException("No weather data received from OpenWeatherMap API");
         }
         
-        return new WeatherData(city, country, apiKey, weatherId, main, description, icon);
+        OpenWeatherMapResponse.Weather weather = response.getWeather().get(0);
+        
+        return new WeatherData(
+            city,
+            country,
+            apiKey,
+            weather.getId(),
+            weather.getMain(),
+            weather.getDescription(),
+            weather.getIcon()
+        );
     }
     
     private boolean isValidApiKey(String apiKey) {

@@ -33,6 +33,13 @@ api:
   rate-limit:
     requests-per-hour: 5
 
+# OpenWeatherMap Configuration
+openweathermap:
+  api:
+    key: "1a250b6158e9394dfb25b06bbb0d4b83"
+    base-url: http://api.openweathermap.org/data/2.5
+    units: metric  # metric, imperial, kelvin
+
 # Logging Configuration
 logging:
   level:
